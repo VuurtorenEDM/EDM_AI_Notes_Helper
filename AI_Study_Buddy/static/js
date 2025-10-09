@@ -1,0 +1,10 @@
+// Smoothly fade out flash messages
+document.addEventListener("DOMContentLoaded", () => {
+  const alerts = document.querySelectorAll(".alert");
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.classList.add("fade");
+      setTimeout(() => alert.remove(), 400);
+    }, 4000);
+  });
+});

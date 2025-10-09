@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm p-4">
+  <h3 class="mb-3">Quiz Result</h3>
+  <p><strong>Score:</strong> {{ result.score }}/{{ result.total }} ({{ (result.score / result.total * 100) | round(1) }}%)</p>
+  <p><strong>Date:</strong> {{ result.date_taken.strftime("%Y-%m-%d %H:%M") }}</p>
+
+  <hr>
+  <h5>💡 AI Feedback:</h5>
+  <div class="alert alert-secondary">{{ result.feedback }}</div>
+
+  <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+</div>
+{% endblock %}

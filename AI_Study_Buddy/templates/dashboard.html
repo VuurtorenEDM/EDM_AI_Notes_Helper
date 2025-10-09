@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Your Notes</h2>
+<a href="{{ url_for('new_note') }}" class="btn btn-primary">Add New Note</a>
+
+<ul class="list-group mt-3">
+  {% for note in notes %}
+    <li class="list-group-item">
+      <a href="{{ url_for('note_detail', note_id=note.id) }}">{{ note.title }}</a>
+    </li>
+  {% else %}
+    <p>No notes yet. Add one to get started!</p>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ note.title }}</h2>
+<p><strong>Original Notes:</strong></p>
+<p>{{ note.content }}</p>
+
+{% if note.summary %}
+  <hr>
+  <h4>AI Summary:</h4>
+  <p>{{ note.summary }}</p>
+{% else %}
+  <form method="POST" action="{{ url_for('summarize', note_id=note.id) }}">
+    <button type="submit" class="btn btn-info">Generate AI Summary</button>
+  </form>
+{% endif %}
+
+<hr>
+<form method="POST" action="{{ url_for('quiz_generate', note_id=note.id) }}">
+  <button type="submit" class="btn btn-secondary">Generate Quiz</button>
+</form>
+
+{% endblock %}

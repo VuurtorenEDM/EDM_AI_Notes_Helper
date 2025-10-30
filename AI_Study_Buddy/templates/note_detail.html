@@ -10,21 +10,21 @@
   <p>{{ note.summary }}</p>
 {% endif %}
 
-<form method="POST" action="{{ url_for('summarize', note_id=note.id) }}">
+<form method="POST" action="{{ url_for('main.summarize', note_id=note.id) }}">
   <button type="submit" class="btn btn-info">Generate AI Summary</button>
 </form>
 
-<form method="POST" action="{{ url_for('quiz_generate', note_id=note.id) }}">
+<form method="POST" action="{{ url_for('main.quiz_generate', note_id=note.id) }}">
   <button type="submit" class="btn btn-secondary mt-2">Generate Quiz</button>
 </form>
 
 {% set existing_quiz = note.quizzes|first %}
 {% if existing_quiz %}
-  <a href="{{ url_for('take_quiz', quiz_id=existing_quiz.id) }}" class="btn btn-success mt-3">Take Latest Quiz</a>
+  <a href="{{ url_for('main.take_quiz', quiz_id=existing_quiz.id) }}" class="btn btn-success mt-3">Take Latest Quiz</a>
 {% endif %}
 
 <hr>
-<form method="POST" action="{{ url_for('quiz_generate', note_id=note.id) }}">
+<form method="POST" action="{{ url_for('main.quiz_generate', note_id=note.id) }}">
   <button type="submit" class="btn btn-secondary">Generate Quiz</button>
 </form>
 

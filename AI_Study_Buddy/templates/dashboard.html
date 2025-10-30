@@ -2,76 +2,139 @@
 {% block content %}
 <h2 class="mb-4"> Your Learning Dashboard</h2>
 
-{% if results %}
-  <div class="card shadow-sm p-4 mb-4">
-    <h4 class="mb-3">Recent Quiz Performance</h4>
-    <canvas id="performanceChart" height="120"></canvas>
-    <p class="mt-3 text-muted">Average score: <strong>{{ avg_score }}%</strong></p>
-  </div>
+<div class="row">
+    <div class="col-lg-6">
+        {% if results %}
+        <div class="card shadow-sm p-4 mb-4">
+            <h4 class="mb-3">Recent Quiz Performance</h4>
+            <canvas id="performanceChart" height="120"></canvas>
+            <p class="mt-3 text-muted">Average score: <strong>{{ avg_score }}%</strong></p>
+        </div>
+        {% else %}
+        <div class="alert alert-info shadow-sm p-4 mb-4">
+            You haven’t taken any quizzes yet. Start by generating one from your notes!
+        </div>
+        {% endif %}
+    </div>
 
-  <div class="card shadow-sm p-4">
-    <h4 class="mb-3">Recent Quiz Results</h4>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Quiz</th>
-          <th>Score</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in results %}
-          <tr>
-            <td>{{ r.date_taken.strftime('%Y-%m-%d %H:%M') }}</td>
-            <td>{{ r.quiz.note.title if r.quiz.note else "Untitled Note" }}</td>
-            <td>{{ r.score }}/{{ r.total }} ({{ (r.score / r.total * 100) | round(1) }}%)</td>
-          </tr>
-          {% if r.feedback %}
-            <tr class="bg-light">
-              <td colspan="3">
-                <small class="text-muted">💡 {{ r.feedback }}</small>
-              </td>
+    <div class="col-lg-6">
+        {% if results %}
+        <div class="card shadow-sm p-4 mb-4">
+            <h4 class="mb-3">Recent Quiz Results</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Quiz</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                        <tr>
+                            <td>{{ r.date_taken.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ url_for('main.view_result', result_id=r.id) }}">
+                                    {{ r.quiz.note.title if r.quiz.note else "Untitled Topic" }}
+                                </a>
+                            </td>
+                            <td>{{ r.score }}/{{ r.total }} ({{ (r.score / r.total * 100) | round(1) }}%)</td>
+                        </tr>
+                        {% if r.feedback %}
+                            <tr class="bg-light">
+                                <td colspan="3">
+                                    <small class="text-muted">💡 {{ r.feedback }}</small>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>📝 Your Study Notes</h4>
+        <a href="{{ url_for('main.new_note') }}" class="btn btn-success">
+            + Add New Note
+        </a>
+    </div>
+    
+    {% if notes %}
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th style="width: 150px;">Details</th>
+                <th style="width: 250px;">Quiz Actions</th>
             </tr>
-          {% endif %}
-        {% endfor %}
-      </tbody>
+        </thead>
+        <tbody>
+            {% for note in notes %}
+            {% set existing_quiz = note.quizzes|first %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('main.note_detail', note_id=note.id) }}">
+                        {{ note.title }}
+                    </a>
+                </td>
+                <td>
+                    {{ note.content|length }} chars
+                </td>
+                <td>
+                    {% if existing_quiz %}
+                        <a href="{{ url_for('main.take_quiz', quiz_id=existing_quiz.id) }}" class="btn btn-sm btn-info me-2">
+                            Take Quiz
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('main.quiz_generate', note_id=note.id) }}" class="btn btn-sm btn-secondary me-2">
+                            Generate Quiz
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-  </div>
-{% else %}
-  <div class="alert alert-info">
-    You haven’t taken any quizzes yet. Start by generating one from your notes!
-  </div>
-{% endif %}
+    {% else %}
+    <p class="text-muted">You have no notes yet. Click 'Add New Note' to start studying!</p>
+    {% endif %}
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const ctx = document.getElementById('performanceChart');
-new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: {{ labels|tojson }},
-    datasets: [{
-      label: 'Quiz Score (%)',
-      data: {{ scores|tojson }},
-      borderColor: '#0d6efd',
-      backgroundColor: 'rgba(13, 110, 253, 0.2)',
-      fill: true,
-      tension: 0.3,
-      pointRadius: 4
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: false }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100
-      }
-    }
-  }
-});
+if (ctx) {
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ labels|default([])|tojson }},
+            datasets: [{
+                label: 'Quiz Score (%)',
+                data: {{ scores|default([])|tojson }},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
 </script>
 {% endblock %}

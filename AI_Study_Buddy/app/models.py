@@ -10,6 +10,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     notes = db.relationship("Note", backref="user", lazy=True)
     results = db.relationship("Result", backref="user", lazy=True)
+    quizzes = db.relationship("Quiz", backref="user", lazy=True) # Added relationship for Quiz
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -17,22 +18,26 @@ class Note(db.Model):
     title = db.Column(db.String(120), nullable=False)
     content = db.Column(db.Text, nullable=False)
     summary = db.Column(db.Text)
-    date_added = db.Column(db.DateTime)
+    date_added = db.Column(db.DateTime, default=datetime.utcnow) # Added default time
     quizzes = db.relationship("Quiz", backref="note", lazy=True)
 
 
 class Quiz(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True) 
+    
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     note_id = db.Column(db.Integer, db.ForeignKey("note.id"), nullable=False)
-    question = db.Column(db.Text, nullable=False)
-    questions_json = db.Column(db.Text, nullable=False)  # store list of dicts
-    options = db.Column(db.Text)
-    correct_answer = db.Column(db.String(255))
-    date_created = db.Column(db.DateTime)
+    
+    questions_json = db.Column(db.Text, nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow) 
     
     def get_questions(self):
-        """Return parsed list of questions."""
-        return json.loads(self.questions_json)
+        """Return parsed list of questions from the JSON field."""
+        try:
+            return json.loads(self.questions_json)
+        except json.JSONDecodeError:
+            print("Error: Could not decode JSON from quiz.questions_json")
+            return []
     
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,6 +46,6 @@ class Result(db.Model):
     score = db.Column(db.Integer, nullable=False)
     total = db.Column(db.Integer, nullable=False)
     date_taken = db.Column(db.DateTime, default=datetime.utcnow)
-    feedback = db.Column(db.Text)  # new field
+    feedback = db.Column(db.Text)
 
     quiz = db.relationship("Quiz", backref="results", lazy=True)
